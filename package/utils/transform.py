@@ -140,9 +140,6 @@ def split_text_into_lines(data, **kwargs):
             "textcontents": line
         }
         subtitles.append(subtitle_line)
-    
-    print(subtitles)
-
     return subtitles
 
 def create_caption(textJSON, framesize, **kwargs):
@@ -191,90 +188,67 @@ def create_caption(textJSON, framesize, **kwargs):
         word_clip_space = TextClip(" ", font = font,fontsize=fontsize*spacing, color=color).set_start(textJSON['start']).set_duration(full_duration)
         word_width, word_height = word_clip.size
         space_width,space_height = word_clip_space.size
-        if line_width + word_width+ space_width <= max_line_width:
-            # Store info of each word_clip created
-            xy_textclips_positions.append({
-                "x_pos":x_pos,
-                "y_pos": y_pos,
-                "width" : word_width,
-                "height" : word_height,
-                "word": wordJSON['word'],
-                "start": wordJSON['start'],
-                "end": wordJSON['end'],
-                "duration": duration
-            })
+        
+        word, start, end = wordJSON['word'], wordJSON['start'], wordJSON['end']
+        dt = end - start
+        
 
-            word_clip = word_clip.set_position((x_pos, y_pos))
-            word_clip_stroke = word_clip_stroke.set_position((x_pos - stroke_width/2, y_pos - stroke_width/2))
-            word_clip_space = word_clip_space.set_position((x_pos+ word_width, y_pos))
-
-            x_pos = x_pos + word_width+ space_width
-            line_width = line_width + word_width + space_width
-        else:
+        if line_width + word_width+ space_width > max_line_width:
             # Move to the next line
-            lines.append(line)
             line = []
             x_pos = bg_x_padding//2
             y_pos = y_pos + word_height + bg_y_padding//2
             line_width = word_width + space_width
 
-            # Store info of each word_clip created
-            xy_textclips_positions.append({
-                "x_pos":x_pos,
-                "y_pos": y_pos,
-                "width" : word_width,
-                "height" : word_height,
-                "word": wordJSON['word'],
-                "start": wordJSON['start'],
-                "end": wordJSON['end'],
-                "duration": duration
-            })
+            
+        word_clip = word_clip.set_position((x_pos, y_pos))
+        word_clip_stroke = word_clip_stroke.set_position((x_pos - stroke_width/2, y_pos - stroke_width/2))
+        word_clip_space = word_clip_space.set_position((x_pos+ word_width , y_pos))
 
-            word_clip = word_clip.set_position((x_pos, y_pos))
-            word_clip_stroke = word_clip_stroke.set_position((x_pos - stroke_width/2, y_pos - stroke_width/2))
-
-            word_clip_space = word_clip_space.set_position((x_pos+ word_width , y_pos))
-            x_pos = word_width + space_width
+        word_clip_highlight = TextClip(word, font = font,fontsize=fontsize, color=highlight_color).set_start(start).set_duration(dt)
+        word_clip_highlight = word_clip_highlight.set_position((x_pos, y_pos))
+        w_init = word_width + bg_x_padding
+        h_init = word_height + bg_y_padding
+        x_init = x_pos - bg_x_padding//2
+        y_init = y_pos - bg_y_padding//2
+        size = (w_init, h_init)
+        scaleFunc, posFunc = makeUpdater(bg_scaling, dt, w_init, h_init, x_init , y_init)
+        color_clip = ColorClip(size=(size), color= bg_color) \
+          .set_opacity(bg_opacity) \
+          .set_position(posFunc) \
+          .resize(scaleFunc) \
+          .set_start(start) \
+          .set_duration(dt)
+          
         
+        x_pos += word_width + space_width
+        line_width += word_width + space_width
         
-        line += [word_clip_stroke, word_clip, word_clip_space]
-        word_clips += [word_clip_stroke, word_clip, word_clip_space]
-
-    for highlight_word in xy_textclips_positions:
-      word_clip_highlight = TextClip(highlight_word['word'], font = font,fontsize=fontsize, color=highlight_color).set_start(highlight_word['start']).set_duration(highlight_word['duration'])
-      word_clip_highlight = word_clip_highlight.set_position((highlight_word['x_pos'], highlight_word['y_pos']))
-
-      w_init = highlight_word['width'] + bg_x_padding
-      h_init = highlight_word['height'] + bg_y_padding
-      x_init = highlight_word['x_pos'] - bg_x_padding // 2
-      y_init = highlight_word['y_pos'] - bg_y_padding // 2
-      dt = highlight_word['duration']
-      size = (w_init, h_init)
-      scaleFunc, posFunc = makeUpdater(bg_scaling, dt, w_init, h_init, x_init , y_init)
-      color_clip = ColorClip(size=(size), color= bg_color) \
-        .set_opacity(bg_opacity) \
-        .set_position(posFunc) \
-        .resize(scaleFunc) \
-        .set_start(highlight_word['start']) \
-        .set_duration(highlight_word['duration']) \
+        line += [color_clip, word_clip_stroke, word_clip, word_clip_space, word_clip_highlight]
         
-      word_clips.insert(0, color_clip)
-      word_clips.append(word_clip_highlight)
+        lines.append({"line": line, "width": line_width, "height": word_height})
 
-    return word_clips, lines
+
+    return lines, word_height
 
 def create_video_from_subtitles(videofilename, timestamps, **kwargs):
-    linelevel_subtitles = split_text_into_lines(timestamps, **kwargs)
+    portions = split_text_into_lines(timestamps, **kwargs)
     input_video = VideoFileClip(videofilename)
     frame_size = input_video.size
     max_width, max_height = frame_size
     all_linelevel_splits=[]
 
-    for line in linelevel_subtitles:
-        out_clips, out_clips_lines = create_caption(line, frame_size, **kwargs)
-        print(out_clips_lines)
-        clip_to_overlay = CompositeVideoClip(out_clips, size=(max_width, int(max_height * 0.2))).set_start(line['start']).set_duration(line['end']-line['start'])
-        all_linelevel_splits.append(clip_to_overlay)
+    for portion in portions:
+        lines, word_height = create_caption(portion, frame_size, **kwargs)
+        for line in lines:
+            out_clips, width, height = line["line"], line["width"], line["height"]
+            pos_x = (max_width - width) / 2
+            pos_y = max_height * 0.8 - height
+            clip_to_overlay = (CompositeVideoClip(out_clips, size=(max_width, int(max_height * 0.2)))
+                               .set_start(portion['start'])
+                               .set_duration(portion['end']-portion['start'])
+            )
+            all_linelevel_splits.append(clip_to_overlay)
     
     input_video_duration = input_video.duration
     final_video = CompositeVideoClip([input_video] + all_linelevel_splits)

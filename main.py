@@ -18,9 +18,8 @@ create_video_from_subtitles("sample.mp4", convert_array(time_stamps), **{
     "stroke_color": "black",
     "stroke_width": 5,
     "spacing": 1.7,
-    "frame_padding": 0.05,
-    "max_chars": 30,
+    "frame_padding": 0.03,
+    "max_chars": 50,
     "max_duration": 2,
     "max_gap": 2,
 });
-
