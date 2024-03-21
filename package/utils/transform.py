@@ -23,7 +23,7 @@ def random_color():
     return (int(random.random()* 255), int(random.random()* 255), int(random.random()* 255))
 
 
-def makeUpdater(scale, duration, initial_width, initial_height, initial_x, initial_y, damping, stiffness):
+def makeUpdater(scale, duration, initial_width, initial_height, initial_x, initial_y, damping, stiffness, border_radius):
     initial_scale = 1
     final_width = initial_width * initial_scale
     final_height = initial_height * initial_scale
@@ -47,6 +47,7 @@ def makeUpdater(scale, duration, initial_width, initial_height, initial_x, initi
         new_x = initial_x + x_offset
         new_y = initial_y + y_offset
         return new_x, new_y
+    
     
     return scaleUpdater, positionUpdater
 
@@ -197,8 +198,11 @@ def create_caption(textJSON, framesize, **kwargs):
         x_init = x_pos - bg_x_padding//2
         y_init = y_pos - bg_y_padding//2
         size = (w_init, h_init)
-        scaleFunc, posFunc = makeUpdater(bg_scaling, dt, w_init, h_init, x_init , y_init, damping, stiffness)
-        mask = ImageClip(rounded_mask(w_init, h_init, bg_border_radius), duration=duration, ismask=True)
+        scaleFunc, posFunc = makeUpdater(bg_scaling, dt, w_init, h_init, x_init , y_init, damping, stiffness, bg_border_radius)
+        mask = ImageClip(rounded_mask(w_init, h_init, bg_border_radius), duration=duration, ismask=True) \
+            .set_position(posFunc) \
+            .resize(scaleFunc)
+
         color_clip = ColorClip(size=(size), color= bg_color) \
           .set_opacity(bg_opacity) \
           .set_position(posFunc) \
@@ -228,9 +232,13 @@ def create_video_from_subtitles(videofilename, timestamps, **kwargs):
     all_linelevel_splits=[]
     y_padding = kwargs.get('y_padding', 15)
     x_padding = kwargs.get('x_padding', 25)
+    height_perc = kwargs.get('location', 0.8)
+
     for portion in portions:
         lines, word_height = create_caption(portion, frame_size, **kwargs)
-        pos_y = y_padding//2
+        portion_height = len(lines) * (word_height+ y_padding)
+        available_height = max_height - portion_height - y_padding
+        pos_y = available_height * height_perc       
         for line_num, line in enumerate(lines):
             out_clips, width, height = line["line"], line["width"], line["height"]
             pos_x = (x_padding + max_width - width)//2

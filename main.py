@@ -7,8 +7,9 @@ with open("time_stamps.json", encoding='utf8') as f:
 
 create_video_from_subtitles("sample.mp4", convert_array(time_stamps), **{
     "font": "Arial-Bold",
-    "fontsize": 40,
+    "fontsize": 50,
     "color": "white",
+    "location": 0.9,
     "highlight_color": "white",
     "bg_color": (142, 171, 211),
     "bg_opacity": 1,
@@ -20,7 +21,7 @@ create_video_from_subtitles("sample.mp4", convert_array(time_stamps), **{
     "bg_y_padding": 15,
     "stroke_color": "black",
     "stroke_width": 5,
-    "spacing": 1.0,
+    "spacing": 1.2,
     "frame_padding": 0.1,
     "max_chars": 20,
     "max_duration": 2,
