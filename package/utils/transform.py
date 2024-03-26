@@ -17,8 +17,6 @@ def rounded_mask(width, height, radius):
     return img
 
 
-
-
 def random_color():
     return (int(random.random()* 255), int(random.random()* 255), int(random.random()* 255))
 
@@ -34,8 +32,6 @@ def makeUpdater(scale, duration, initial_width, initial_height, initial_x, initi
         damping_force = -damping * t * delta_scale / duration
         acceleration = (spring_force + damping_force) / duration
         scale_factor = start_scale + t/duration * (scale - start_scale) + acceleration * t
-        
-        # Return scale factor
         return scale_factor
     
     def positionUpdater(t):
@@ -198,26 +194,24 @@ def create_caption(textJSON, framesize, **kwargs):
         x_init = x_pos - bg_x_padding//2
         y_init = y_pos - bg_y_padding//2
         size = (w_init, h_init)
+        
         scaleFunc, posFunc = makeUpdater(bg_scaling, dt, w_init, h_init, x_init , y_init, damping, stiffness, bg_border_radius)
-        mask = ImageClip(rounded_mask(w_init, h_init, bg_border_radius), duration=duration, ismask=True) \
-            .set_position(posFunc) \
-            .resize(scaleFunc)
-
+        
+        mask = ImageClip(rounded_mask(w_init, h_init, bg_border_radius), duration=duration, ismask=True)
         color_clip = ColorClip(size=(size), color= bg_color) \
+          .set_mask(mask) \
           .set_opacity(bg_opacity) \
           .set_position(posFunc) \
           .resize(scaleFunc) \
           .set_start(start) \
           .set_duration(dt) \
-          .set_mask(mask)
           
         line += [color_clip, word_clip_stroke, word_clip, word_clip_space, word_clip_highlight]
         
         x_pos += word_width + space_width
         line_width += word_width + space_width
         if (line_width + word_width+ space_width > max_line_width) or (index == wordcount-1):
-            # next line
-            lines.append({"line": line, "width": line_width, "height": word_height})
+            lines.append({"line": line, "width": line_width, "height": word_height, "start": textJSON['start'], "duration": full_duration})
             line = []
             x_pos = bg_x_padding//2
             line_width = 0
@@ -230,9 +224,10 @@ def create_video_from_subtitles(videofilename, timestamps, **kwargs):
     frame_size = input_video.size
     max_width, max_height = frame_size
     all_linelevel_splits=[]
-    y_padding = kwargs.get('y_padding', 15)
-    x_padding = kwargs.get('x_padding', 25)
-    height_perc = kwargs.get('location', 0.8)
+    height_perc = kwargs.get('location', 0.5)
+    scale = kwargs.get('bg_scaling_factor', 0.5)
+    x_padding = int(kwargs.get('x_padding', 25) * scale)
+    y_padding = int(kwargs.get('y_padding', 15) * scale)
 
     for portion in portions:
         lines, word_height = create_caption(portion, frame_size, **kwargs)
@@ -241,9 +236,9 @@ def create_video_from_subtitles(videofilename, timestamps, **kwargs):
         pos_y = available_height * height_perc       
         for line_num, line in enumerate(lines):
             out_clips, width, height = line["line"], line["width"], line["height"]
-            pos_x = (x_padding + max_width - width)//2
+            pos_x = (max_width - (width + x_padding))//2
             pos_y += height
-            clip_to_overlay = CompositeVideoClip(out_clips, size=(max_width, max_height)).set_position((pos_x, pos_y))
+            clip_to_overlay = CompositeVideoClip(out_clips, size=(width + x_padding, height + y_padding )).set_position((pos_x, pos_y))
             all_linelevel_splits.append(clip_to_overlay)
     
     input_video_duration = input_video.duration
