@@ -27,7 +27,7 @@ ENV PYTHONUNBUFFERED 1
 RUN mkdir /code
 WORKDIR /code
 ADD requirements.txt /code/
-RUN pip install --upgrade pip
+RUN pip install pip==19.1.1
 RUN pip install -r requirements.txt
 
 
