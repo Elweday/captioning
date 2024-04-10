@@ -1,2 +1,2 @@
 ffmpeg==1.4
-opencv-python==3.4.7
+opencv-python==4.9.0.80
