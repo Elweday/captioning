@@ -17,4 +17,4 @@ jobs:
     - name: Build the Docker image
       run: |
         docker build . --file Dockerfile --tag studyio
-        docker run studyio sample.mp4 time_stamps.json options.json 
+        docker run studyio sample.mp4 time_stamps.json 
