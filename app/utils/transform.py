@@ -5,26 +5,24 @@ import ffmpeg
 import random
 import cv2
 
-def rounded_mask(width, height, radius):
-    img = np.zeros((height, width, 3), dtype=np.uint8)
-    WHITE = (255, 255, 255)
-    cv2.rectangle(img, (0, radius), (width, height - radius), WHITE, -1)
-    cv2.rectangle(img, (radius, 0), (width - radius, height), WHITE, -1)
-    cv2.circle(img, (radius, radius), radius, WHITE, -1)
-    cv2.circle(img, (width - radius, radius), radius, WHITE, -1)
-    cv2.circle(img, (radius, height - radius), radius, WHITE, -1)
-    cv2.circle(img, (width - radius, height - radius), radius, WHITE, -1)
+def rounded_mask(width, height, radius, color=(255, 255, 255, 255), margin=(0, 0)):
+    mx, my = margin
+    img = np.zeros((height + 2*my, width + 2*mx, 4), dtype=np.uint8)  # Expand image size
+    cv2.rectangle(img, (mx, my + radius), (width + mx, height + my - radius), color, -1)
+    cv2.rectangle(img, (mx + radius, my), (width + mx - radius, height + my), color, -1)
+    cv2.circle(img, (mx + radius, my + radius), radius, color, -1)
+    cv2.circle(img, (width + mx - radius, my + radius), radius, color, -1)
+    cv2.circle(img, (mx + radius, height + my - radius), radius, color, -1)
+    cv2.circle(img, (width + mx - radius, height + my - radius), radius, color, -1)
     return img
 
-
 def random_color():
-    return (int(random.random()* 255), int(random.random()* 255), int(random.random()* 255))
+    return (int(random.random()* 255), int(random.random()* 255), int(random.random()* 255), 30)
 
-
-def makeUpdater(scale, duration, initial_width, initial_height, initial_x, initial_y, damping, stiffness, border_radius):
+def makeUpdater(scale, duration, initial_width, initial_height, initial_x, initial_y, damping, stiffness, mx, my):
     initial_scale = 1
-    final_width = initial_width * initial_scale
-    final_height = initial_height * initial_scale
+    final_width = (initial_width * initial_scale)
+    final_height = (initial_height * initial_scale)
     def scaleUpdater(t):
         start_scale = initial_scale
         delta_scale = scale - start_scale
@@ -32,19 +30,15 @@ def makeUpdater(scale, duration, initial_width, initial_height, initial_x, initi
         damping_force = -damping * t * delta_scale / duration
         acceleration = (spring_force + damping_force) / duration
         scale_factor = start_scale + t/duration * (scale - start_scale) + acceleration * t
-        return scale_factor
+        return scale_factor if scale_factor >= initial_scale else initial_scale
     
     def positionUpdater(t):
         scale_factor = scaleUpdater(t)
-        new_width = initial_width * scale_factor
-        new_height = initial_height * scale_factor
-        x_offset = (final_width - new_width) / 2
-        y_offset = (final_height - new_height) / 2
-        new_x = initial_x + x_offset
-        new_y = initial_y + y_offset
-        return new_x, new_y
-    
-    
+        x_offset = (initial_width) * (1 - scale_factor) / 2
+        y_offset = (initial_height) * (1 - scale_factor) / 2
+        new_x = initial_x + x_offset  - mx
+        new_y = initial_y + y_offset  - my
+        return new_x , new_y
     return scaleUpdater, positionUpdater
 
 
@@ -148,7 +142,6 @@ def create_caption(textJSON, framesize, **kwargs):
     spacing = kwargs.get('spacing', 1.5)
     frame_padding = kwargs.get('frame_padding', 0.07)
     
-    
     wordcount = len(textJSON['textcontents'])
     full_duration = textJSON['end']-textJSON['start']
     xy_textclips_positions = []
@@ -191,15 +184,16 @@ def create_caption(textJSON, framesize, **kwargs):
         
         w_init = word_width + bg_x_padding
         h_init = word_height + bg_y_padding
+        w_final = int(w_init * bg_scaling)
+        h_final = int(h_init * bg_scaling)
+        mx, my = (w_final-w_init, h_final-h_init)
         x_init = x_pos - bg_x_padding//2
         y_init = y_pos - bg_y_padding//2
-        size = (w_init, h_init)
-        
-        scaleFunc, posFunc = makeUpdater(bg_scaling, dt, w_init, h_init, x_init , y_init, damping, stiffness, bg_border_radius)
-        
-        mask = ImageClip(rounded_mask(w_init, h_init, bg_border_radius), duration=duration, ismask=True)
-        color_clip = ColorClip(size=(size), color= bg_color) \
-          .set_mask(mask) \
+        t = kwargs.get('bg_scaling_duration', 0.25)
+        scaleFunc, posFunc = makeUpdater(bg_scaling, t, w_init, h_init, x_init , y_init, damping, stiffness, mx, my)
+        box_color = (*bg_color, int(bg_opacity * 255))
+        img = rounded_mask(w_init, h_init, bg_border_radius, color=box_color, margin=(mx,my))
+        color_clip = ImageClip(img, duration=duration) \
           .set_opacity(bg_opacity) \
           .set_position(posFunc) \
           .resize(scaleFunc) \
@@ -225,7 +219,7 @@ def create_video_from_subtitles(videofilename, timestamps, **kwargs):
     max_width, max_height = frame_size
     all_linelevel_splits=[]
     height_perc = kwargs.get('location', 0.5)
-    scale = kwargs.get('bg_scaling_factor', 0.5)
+    scale = kwargs.get('bg_scaling_factor', 1.1)
     x_padding = int(kwargs.get('x_padding', 25) * scale)
     y_padding = int(kwargs.get('y_padding', 15) * scale)
 
@@ -238,7 +232,7 @@ def create_video_from_subtitles(videofilename, timestamps, **kwargs):
             out_clips, width, height = line["line"], line["width"], line["height"]
             pos_x = (max_width - (width + x_padding))//2
             pos_y += height
-            clip_to_overlay = CompositeVideoClip(out_clips, size=(width + x_padding, height + y_padding )).set_position((pos_x, pos_y))
+            clip_to_overlay = CompositeVideoClip(out_clips, size=(width + x_padding, height + y_padding + 20)).set_position((pos_x, pos_y))
             all_linelevel_splits.append(clip_to_overlay)
     
     input_video_duration = input_video.duration

@@ -1,6 +1,6 @@
-*.mp4
-*.png
+
 __pycache__
+*.mp4
 *.mov
 *.json
 *.ipynb
