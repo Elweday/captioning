@@ -34,4 +34,4 @@ ADD app /code/app
 
 # Entrypoint configuration
 CMD           ["-h"]
-ENTRYPOINT    ["python", "/code/app/script.py"]
+ENTRYPOINT    ["python", "/code/app/main.py"]
