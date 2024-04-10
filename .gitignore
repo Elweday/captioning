@@ -1,4 +1,4 @@
-*.mp4
+*_output.mp4
 *.png
 __pycache__
 *.mov
