@@ -191,7 +191,9 @@ def create_caption(textJSON, framesize, **kwargs):
         y_init = y_pos - bg_y_padding//2
         t = kwargs.get('bg_scaling_duration', 0.25)
         scaleFunc, posFunc = makeUpdater(bg_scaling, t, w_init, h_init, x_init , y_init, damping, stiffness, mx, my)
-        box_color = (*bg_color, int(bg_opacity * 255))
+        # box_color = (*bg_color, int(bg_opacity * 255))
+        box_color = tuple(list(bg_color) + [int(bg_opacity * 255)])
+
         img = rounded_mask(w_init, h_init, bg_border_radius, color=box_color, margin=(mx,my))
         color_clip = ImageClip(img, duration=duration) \
           .set_opacity(bg_opacity) \
