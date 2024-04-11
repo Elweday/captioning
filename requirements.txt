@@ -1,2 +1,3 @@
 ffmpeg==1.4
 opencv-python==4.3.0.38
+flask==1.1.2

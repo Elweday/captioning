@@ -244,3 +244,4 @@ def create_video_from_subtitles(videofilename, timestamps, **kwargs):
     output_filename = videofilename.replace(".mp4","_output.mp4")
     
     final_video.write_videofile(output_filename, fps=input_video.fps, codec="libx264", audio_codec="aac")
+    return output_filename
