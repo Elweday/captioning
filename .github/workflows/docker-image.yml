@@ -24,8 +24,7 @@ jobs:
         file: Dockerfile
         push: true
         tags: |
-          gcr.io/manim-videos/captioning:latest
-          gcr.io/manim-videos/captioning:${{ github.sha }}
+          gcr.io/manim-videos/captioning
       env:
         DOCKER_BUILDKIT: 1
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCLOUD_SERVICE_KEY }} 
