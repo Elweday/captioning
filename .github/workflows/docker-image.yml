@@ -1,30 +1,52 @@
-
-name: Build and Push Docker Image to Google Cloud Artifact Registry
-
+---
+name: Build and Push Python Image to Google Cloud Platform
 on:
   push:
-    branches:
-      - master
-
+    branches: [ master ]
 jobs:
-  build_and_push:
+  build-push-gcr:
+    name: Build and Push to GCP
     runs-on: ubuntu-latest
-
+    env:
+      IMAGE_NAME: captioning
+      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
-
-    - name: Build and push Docker image to Google Artifact Registry
-      uses: docker/build-push-action@v2
+    - uses: google-github-actions/setup-gcloud@master
       with:
-        context: .
-        file: Dockerfile
-        push: true
-        tags: |
-          gcr.io/manim-videos/captioning
+        service_account_key: ${{ secrets.GCLOUD_SERVICE_KEY }}
+        project_id: ${{ env.PROJECT_ID }}
+        export_default_credentials: true
+
+    - name: Build Docker Image
+      run: docker build -t $IMAGE_NAME:latest .
+
+    - name: Automatic Tagging of Releases
+      id: increment-git-tag
+      run: |
+        bash ./scripts/git_update.sh -v major
+
+    - name: Configure Docker Client
+      run: |-
+        gcloud auth configure-docker --quiet
+        gcloud auth configure-docker us-west2-docker.pkg.dev --quiet
+
+    - name: Push Docker Image to Container Registry (GCR)
       env:
-        DOCKER_BUILDKIT: 1
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCLOUD_SERVICE_KEY }} 
+        GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+      run: |-
+        docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+        docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+        docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+        docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+
+    - name: Push Docker Image to Artifact Registry
+      env:
+        GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+      run: |-
+        docker tag $IMAGE_NAME:latest us-west2-docker.pkg.dev/$PROJECT_ID/images/$IMAGE_NAME:latest
+        docker tag $IMAGE_NAME:latest us-west2-docker.pkg.dev/$PROJECT_ID/images/$IMAGE_NAME:$GIT_TAG
+        docker push us-west2-docker.pkg.dev/$PROJECT_ID/images/$IMAGE_NAME:latest
+        docker push us-west2-docker.pkg.dev/$PROJECT_ID/images/$IMAGE_NAME:$GIT_TAG
