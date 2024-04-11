@@ -1,5 +1,5 @@
 
-name: Build and Push Docker Image to Google Cloud Artifact Registry
+name: Build and Push Docker Image to Google Cloud Artifact Registry  
 
 on:
   push:
