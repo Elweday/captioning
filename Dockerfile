@@ -14,4 +14,4 @@ RUN pip install -r requirements.txt
 ADD app /code/app
 
 # Entrypoint configuration
-CMD    ["python", "/code/app/main.py"]
+CMD    ["python", "/code/server.py"]
