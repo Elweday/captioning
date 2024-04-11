@@ -24,8 +24,8 @@ jobs:
         file: Dockerfile
         push: true
         tags: |
-          gcr.io/your-project-id/image-name:latest
-          gcr.io/your-project-id/image-name:${{ github.sha }}
+          gcr.io/manim-videos/captioning:latest
+          gcr.io/manim-videos/captioning:${{ github.sha }}
       env:
         DOCKER_BUILDKIT: 1
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCLOUD_SERVICE_KEY }} 
