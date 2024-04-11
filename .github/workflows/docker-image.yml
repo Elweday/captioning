@@ -1,16 +1,13 @@
 name: Push to GCR GitHub Action
 on: [push]
 jobs:
-  build-and-push-to-gcr:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-    steps:      
-      - uses: actions/checkout@v3
-      - uses: RafikFarhad/push-to-gcr-github-action@v5-rc1
+    steps:
+      - name: Build and push repo
+        uses: dacbd/gcr-build-push@main
         with:
-          gcloud_service_key: ${{ secrets.GCLOUD_SERVICE_KEY }} # can be base64 encoded or plain text || not needed if you use google-github-actions/auth
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          image_name: backend
-          image_tag: latest,v1
+          tags: latest
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+          GCR-key: ${{ secrets.GCLOUD_SERVICE_KEY }} 
+
