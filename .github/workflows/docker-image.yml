@@ -7,8 +7,7 @@ jobs:
       - name: Build and push repo
         uses: dacbd/gcr-build-push@main
         with:
-          tags: latest
           project-id: ${{ secrets.GCP_PROJECT_ID }}
           GCR-key: ${{ secrets.GCLOUD_SERVICE_KEY }} 
-          container-name: "gcr.io/${{ secrets.GCP_PROJECT_ID }}/captioning"
+          container-name: "captioning"
 
