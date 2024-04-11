@@ -14,11 +14,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - uses: google-github-actions/setup-gcloud@v2
+    - uses: 'google-github-actions/auth@v2'
       with:
-        service_account_key: ${{ secrets.GCLOUD_SERVICE_KEY }}
         project_id: ${{ env.PROJECT_ID }}
-        export_default_credentials: true
+        credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY }}
 
     - name: Build Docker Image
       run: docker build -t $IMAGE_NAME:latest .
