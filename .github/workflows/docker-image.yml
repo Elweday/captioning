@@ -10,4 +10,5 @@ jobs:
           tags: latest
           project-id: ${{ secrets.GCP_PROJECT_ID }}
           GCR-key: ${{ secrets.GCLOUD_SERVICE_KEY }} 
+          container-name: "gcr.io/${{ secrets.GCP_PROJECT_ID }}/captioning"
 
