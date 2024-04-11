@@ -6,8 +6,10 @@ LABEL DESCRIPTION="Studyio Docker Image for creating subtitles for videos. Based
 # Installing Python packages
 
 ENV PYTHONUNBUFFERED 1
+RUN mkdir /code
 ADD . .
+WORKDIR /code
 RUN pip install -r requirements.txt
 
 # Entrypoint configuration
-CMD           ["python", "server.py"]
+CMD  ["python", "server.py"]
