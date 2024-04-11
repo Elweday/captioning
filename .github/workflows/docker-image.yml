@@ -19,6 +19,9 @@ jobs:
         project_id: ${{ env.PROJECT_ID }}
         credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY }}
 
+    - name: "gcloud setup"
+      uses: google-github-actions/setup-gcloud@v2
+
     - name: Build Docker Image
       run: docker build -t $IMAGE_NAME:latest .
 
