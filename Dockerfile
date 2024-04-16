@@ -1,16 +1,14 @@
 FROM tburrows13/moviepy
 
 LABEL AUTHOR="Nasser"
-LABEL DESCRIPTION="Studyio Docker Image for creating subtitles for videos. Based on dkarchmervue/moviepy"
+LABEL DESCRIPTION="Studyio Docker Image for creating subtitles for videos."
 
 ENV PYTHONUNBUFFERED 1
-RUN mkdir /code
-WORKDIR /code
-ADD requirements.txt /code/
+RUN mkdir /home/code
+COPY . /home/code
 RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install -r /home/code/requirements.txt
 
-ADD app /code/app
 
 # Entrypoint configuration
-CMD    ["python", "/code/server.py"]
+CMD    ["python", "/home/code/server.py"]
