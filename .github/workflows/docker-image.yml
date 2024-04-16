@@ -17,7 +17,7 @@ jobs:
     - uses: 'google-github-actions/auth@v2'
       with:
         project_id: ${{ env.PROJECT_ID }}
-        credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY }}
+        credentials_json: ${{ secrets.GCP_GCR_KEY }}
 
     - name: "gcloud setup"
       uses: google-github-actions/setup-gcloud@v2
