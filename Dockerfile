@@ -1,4 +1,4 @@
-FROM tburrows13/moviepy
+FROM jarrodhroberson/moviepy
 
 LABEL AUTHOR="Nasser"
 LABEL DESCRIPTION="Studyio Docker Image for creating subtitles for videos."
