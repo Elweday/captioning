@@ -9,6 +9,7 @@ COPY ./app /home/app
 COPY ./requirements.txt /home/requirements.txt
 RUN pip install --upgrade pip
 RUN pip install -r /home/requirements.txt
+ENV PORT 8080
 
 CMD    ["python", "/home/app/server.py"]
 

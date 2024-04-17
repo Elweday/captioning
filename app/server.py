@@ -1,14 +1,34 @@
-from flask import Flask, request, send_file, logging, jsonify
+from flask import Flask, request, send_file
 import json
-from moviepy.editor import VideoFileClip
-import sys
-from app.utils import convert_array, create_video_from_subtitles
-
+from utils import convert_array, create_video_from_subtitles
+from os import environ
 
 app = Flask(__name__)
 
-with open('./default.json', 'r') as f:
-    default_options = json.load(f)
+
+default_options = {
+    "font": "Arial-Bold",
+    "fontsize": 50,
+    "color": "white",
+    "location": 0.5,
+    "highlight_color": "white",
+    "bg_color": [142, 171, 211],
+    "bg_opacity": 1,
+    "bg_border_radius": 20,
+    "bg_scaling_factor": 1.1,
+    "bg_scaling_damping": 0.3,
+    "bg_scaling_stiffness": 0.4,
+    "bg_scaling_duration": 0.3,
+    "bg_x_padding": 35,
+    "bg_y_padding": 25,
+    "stroke_color": "black",
+    "stroke_width": 5,
+    "spacing": 1.2,
+    "frame_padding": 0.1,
+    "max_chars": 20,
+    "max_duration": 2,
+    "max_gap": 2
+}
 
 
 @app.route('/', methods=['POST'])
@@ -44,4 +64,4 @@ def process_video():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=environ.get('PORT', 8080))
