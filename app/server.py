@@ -1,5 +1,4 @@
 from flask import Flask, request, send_file, logging, jsonify
-import os
 import json
 from moviepy.editor import VideoFileClip
 import sys
@@ -7,6 +6,9 @@ from app.utils import convert_array, create_video_from_subtitles
 
 
 app = Flask(__name__)
+
+with open('./default.json', 'r') as f:
+    default_options = json.load(f)
 
 
 @app.route('/', methods=['POST'])
@@ -29,7 +31,7 @@ def process_video():
     try:
         options = json.loads(request.files['options'].read())
     except:
-        options = {}
+        options = default_options
 
     # Save the uploaded file
     uploaded_file.save(filename)

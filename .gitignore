@@ -1,8 +1,7 @@
-*_output.mp4
+*.mp4
 *.png
 __pycache__
 *.mov
-*.json
 *.ipynb
 *.png
 *.jpg
