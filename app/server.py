@@ -5,7 +5,6 @@ from os import environ
 
 app = Flask(__name__)
 
-
 default_options = {
     "font": "Arial-Bold",
     "fontsize": 50,
@@ -31,6 +30,13 @@ default_options = {
 }
 
 
+@app.route('/', methods=['GET'])
+def index():
+    return """
+    <h1>Video Subtitle Generator send a POST request with a video and timestamps</h1>
+    """
+
+
 @app.route('/', methods=['POST'])
 def process_video():
     # Check if the request contains a file
@@ -53,13 +59,10 @@ def process_video():
     except:
         options = default_options
 
-    # Save the uploaded file
     uploaded_file.save(filename)
     output_filename = create_video_from_subtitles(
-        filename, convert_array(time_stamps),
-        **options)
+        filename, convert_array(time_stamps), **options)
 
-    # Return the processed video file
     return send_file(output_filename, mimetype='video/mp4')
 
 
