@@ -1,2 +1,3 @@
 ffmpeg==1.4
 flask>=2.2.2
+opencv-python
