@@ -1,3 +1,5 @@
 ffmpeg==1.4
-flask>=2.2.2
 opencv-python
+moviepy==1.0.3
+flask==3.0.0
+python-dotenv==1.0.0
