@@ -4,7 +4,7 @@ LABEL AUTHOR="Nasser"
 LABEL DESCRIPTION="Studyio Docker Image for creating subtitles for videos."
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    build-essential autoconf pkg-config wget ghostscript curl libpng-dev
+    build-essential autoconf pkg-config wget ffmpeg libsm6 libxext6 ghostscript curl libpng-dev
 
 RUN wget https://github.com/ImageMagick/ImageMagick/archive/refs/tags/7.1.0-31.tar.gz && \
     tar xzf 7.1.0-31.tar.gz && \
